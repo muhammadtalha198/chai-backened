@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/muhammadtalha198/chai-backened#readme",
   "devDependencies": {
-    "nodemon": "^3.1.11"
+    "nodemon": "^3.1.11",
+    "prettier": "^3.7.1"
   }
 }
