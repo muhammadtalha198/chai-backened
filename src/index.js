@@ -1,11 +1,12 @@
 
 import dotenv from "dotenv"
-import connectBD from "./db/index.js";
+import connectBD from "./db/connectdb.js";
+import { app } from "./app.js";
 dotenv.config()
 
 connectBD().then(() => {
     app.listen(process.env.PORT, () => {
-        console.log(`Server is running on port ${process.env.PORT}`);
+        console.log(`Server is running at http://localhost:${process.env.PORT}`);
     });
 }).catch((error) => {
     console.error("Database connection failed", error);
