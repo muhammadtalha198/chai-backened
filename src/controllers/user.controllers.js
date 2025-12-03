@@ -1,8 +1,58 @@
 import {asyncHandler} from "../utils/asynchandler.js";
+import {ApiError} from "../utils/apiError.js";
+import {User} from "../models/user.model.js";
+import {uploadToCloudinary} from "../utils/cloudinary.js";
+import {Apiresponse} from "../utils/ApiResponse.js";
  
 const registerUser = asyncHandler(async(req, res) => {
-    res.status(200).json({message: "Registerd User"});
+    
+    const{fullname, email, username, password} = req.body;
+    
+    if([fullname, email, username, password].some(field => field?.trim() === "")){
+        throw new ApiError(400, "All fields are required");
+    }
+
+    const existingUser = await User.findOne({
+        $or: [{email}, {username}]
+    });
+    if(existingUser){
+        throw new ApiError(409, "User with provided email or username already exists");
+    }
+
+    const avatarLocalPath = req.files?.avatar[0]?.path;
+    const coverPhotoLocalPath = req.files?.coverPhoto[0]?.path;
+
+    if(!avatarLocalPath || !coverPhotoLocalPath){
+        throw new ApiError(400, "Avatar and Cover Photo are required");
+    }
+
+    const avatarUploadResult = await uploadToCloudinary(avatarLocalPath, "avatars");
+    const coverPhotoUploadResult = await uploadToCloudinary(coverPhotoLocalPath, "coverPhotos");
+
+    if (!avatarUploadResult?.secure_url || !coverPhotoUploadResult?.secure_url){
+        throw new ApiError(500, "Image upload failed");
+    }
+
+    const newUser = await User.create({
+        fullname,
+        email,
+        username: username.toLowerCase(),
+        password,
+        avatar: avatarUploadResult.secure_url,
+        coverPhoto: coverPhotoUploadResult?.secure_url || ""
+    });
+
+    const createdUser = await User.findById(newUser._id).select("-password -refreshToken");
+
+    if(!createdUser){
+        throw new ApiError(500, "User creation failed");
+    }
+
+    return res.status(201).json(
+        new Apiresponse(201,createdUser, "User registered successfully"));
+    
+
 });
     
 
-export {registerUser};
+export {registerUser}; 
