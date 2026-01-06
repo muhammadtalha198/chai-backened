@@ -1,7 +1,7 @@
 import {asyncHandler} from "../utils/asynchandler.js";
 import {ApiError} from "../utils/apiError.js";
-import {User} from "../models/user.model.js";
-import {uploadToCloudinary} from "../utils/cloudinary.js";
+import {User} from "../models/user.models.js";
+import {uploadOnCloudinary} from "../utils/cloudinary.js";
 import {Apiresponse} from "../utils/ApiResponse.js";
  
 const registerUser = asyncHandler(async(req, res) => {
@@ -26,10 +26,10 @@ const registerUser = asyncHandler(async(req, res) => {
         throw new ApiError(400, "Avatar and Cover Photo are required");
     }
 
-    const avatarUploadResult = await uploadToCloudinary(avatarLocalPath, "avatars");
-    const coverPhotoUploadResult = await uploadToCloudinary(coverPhotoLocalPath, "coverPhotos");
+    const avatarUploadResult = await uploadOnCloudinary(avatarLocalPath, "avatars");
+    const coverPhotoUploadResult = await uploadOnCloudinary(coverPhotoLocalPath, "coverPhotos");
 
-    if (!avatarUploadResult?.secure_url || !coverPhotoUploadResult?.secure_url){
+    if (!avatarUploadResult?.url || !coverPhotoUploadResult?.url){
         throw new ApiError(500, "Image upload failed");
     }
 
@@ -38,8 +38,8 @@ const registerUser = asyncHandler(async(req, res) => {
         email,
         username: username.toLowerCase(),
         password,
-        avatar: avatarUploadResult.secure_url,
-        coverPhoto: coverPhotoUploadResult?.secure_url || ""
+        avatar: avatarUploadResult.url,
+        coverPhoto: coverPhotoUploadResult.url
     });
 
     const createdUser = await User.findById(newUser._id).select("-password -refreshToken");

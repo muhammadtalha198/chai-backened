@@ -7,7 +7,10 @@ cloudinary.config({
     api_secret: process.env.API_SECRET
 });
 
+
+
 const uploadOnCloudinary = async(localFilePath) => {
+    
     try {
         if (!localFilePath) return null;
         // Upload the image to Cloudinary
@@ -19,12 +22,13 @@ const uploadOnCloudinary = async(localFilePath) => {
             unique_filename: false
         });
         //if file uploaded successfully, delete the local file
-        console.log("file upload successfully:", result.url);
+        // console.log("file upload successfully:", result.url);
         fs.unlinkSync(localFilePath); // Delete the local file in case of error
         
-        return result.url;
+        return result;
         
     } catch (error) {
+        fs.unlinkSync(localFilePath); // Delete the local file in case of error
         console.error("Error uploading to Cloudinary:", error);
         throw error;
     }
